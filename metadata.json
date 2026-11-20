@@ -1,0 +1,6 @@
+{
+  "name": "Katalog",
+  "description": "Internal inventory photo catalogue with Material 3 Expressive design, Firebase authentication, offline caching & sync, and built-in photo editing.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

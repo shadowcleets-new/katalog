@@ -1,0 +1,202 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated atelier or manufacturing staff profile with strictly isolated PII.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID matching the document ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Staff member display name.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Staff member email address (PII, owner-only read).",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "role": {
+          "type": "string",
+          "description": "Immutable self-registered staff role.",
+          "enum": ["staff"]
+        },
+        "department": {
+          "type": "string",
+          "description": "Atelier department or workshop location.",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the last profile update."
+        }
+      },
+      "required": ["uid", "displayName", "email", "role", "department", "createdAt", "updatedAt"]
+    },
+    "InventoryItem": {
+      "title": "InventoryItem",
+      "description": "Salwar Kameez garment design record with per-size stock & distinct INR pricing, outsourced Karigar workflow log, raw material specs, and local photography reference.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique design identifier matching the document ID.",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the owning atelier account.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sku": {
+          "type": "string",
+          "description": "Uppercase alphanumeric design code (SKU).",
+          "minLength": 2,
+          "maxLength": 32,
+          "pattern": "^[A-Z0-9\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Human-readable garment design name.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "category": {
+          "type": "string",
+          "description": "Salwar Kameez collection category.",
+          "enum": ["Cotton Daily", "Festive Silk", "Chanderi", "Anarkali", "Co-ord Sets"]
+        },
+        "location": {
+          "type": "string",
+          "description": "Workshop rack, shelf, or packing zone in Mumbai unit.",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Total finished pieces across all sizes (integer >= 0)."
+        },
+        "minThreshold": {
+          "type": "number",
+          "description": "Per-size low-stock alert threshold (integer >= 0, typically 5)."
+        },
+        "status": {
+          "type": "string",
+          "description": "Design inventory availability or QC status.",
+          "enum": ["in_stock", "low_stock", "out_of_stock", "audit_pending"]
+        },
+        "sizes": {
+          "type": "array",
+          "description": "Bounded array (1 to 12 entries) of { size: string (1-16), stock: int (0-100000), price: int (0-1000000 INR) }."
+        },
+        "lastKarigarName": {
+          "type": "string",
+          "description": "Name of the Karigar the design was most recently given to.",
+          "maxLength": 80
+        },
+        "lastKarigarStage": {
+          "type": "string",
+          "description": "Manufacturing craft stage for the latest Karigar handover.",
+          "maxLength": 60
+        },
+        "lastKarigarDate": {
+          "type": "string",
+          "description": "ISO date (YYYY-MM-DD) when the design was last handed over.",
+          "maxLength": 20
+        },
+        "karigars": {
+          "type": "array",
+          "description": "Bounded array (0 to 10 entries) of outsourced stage logs { stage, karigarName, unitOrNote, dateGiven }."
+        },
+        "rawMaterials": {
+          "type": "object",
+          "description": "Structured raw material specification map { topFabric, colorShade, bottomFabric, dupattaFabric, materialNotes }."
+        },
+        "notes": {
+          "type": "string",
+          "description": "General packing, ironing, or dispatch notes.",
+          "maxLength": 600
+        },
+        "mediaKey": {
+          "type": "string",
+          "description": "Reference path or local IndexedDB media key (no raw image binaries in Firestore).",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "photoFilter": {
+          "type": "string",
+          "description": "Applied photo editor filter preset.",
+          "enum": ["original", "crisp", "warm", "cool", "mono", "contrast"]
+        },
+        "photoAspect": {
+          "type": "string",
+          "description": "Applied photo editor crop aspect preset.",
+          "enum": ["free", "1:1", "4:3", "16:9", "3:4"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when design was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the last design update."
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "sku",
+        "title",
+        "category",
+        "location",
+        "quantity",
+        "minThreshold",
+        "status",
+        "sizes",
+        "lastKarigarName",
+        "lastKarigarStage",
+        "lastKarigarDate",
+        "karigars",
+        "rawMaterials",
+        "notes",
+        "mediaKey",
+        "photoFilter",
+        "photoAspect",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Owner-isolated staff user profile containing PII."
+    },
+    "/users/{userId}/inventory/{itemId}": {
+      "schema": { "$ref": "#/entities/InventoryItem" },
+      "description": "Owner-scoped Salwar Kameez garment design catalogue entries."
+    }
+  }
+}

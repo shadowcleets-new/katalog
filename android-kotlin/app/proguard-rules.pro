@@ -1,0 +1,2 @@
+-keep class com.katalog.atelier.domain.model.** { *; }
+-keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod

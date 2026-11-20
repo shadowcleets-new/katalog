@@ -35,6 +35,7 @@ data class KatalogUiState(
     val session: AuthUserSession? = null,
     val authLoading: Boolean = false,
     val authError: String? = null,
+    val passwordResetNotice: String? = null,
     val isFirebaseConfigured: Boolean = false,
     val isOnline: Boolean = true,
     val allItems: List<InventoryItem> = emptyList(),
@@ -192,6 +193,61 @@ class KatalogViewModel(
             authManager.sendVerificationEmail()
                 .onSuccess { postSnackbar("Verification email sent.") }
                 .onFailure { postSnackbar(it.message ?: "Could not send verification email.") }
+        }
+    }
+
+    fun sendPasswordReset(email: String) {
+        val trimmed = email.trim()
+        if (trimmed.isBlank() || !trimmed.contains("@")) {
+            _uiState.update {
+                it.copy(
+                    authError = "Enter your work email address first, then tap Forgot password.",
+                    passwordResetNotice = null
+                )
+            }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(authLoading = true, authError = null, passwordResetNotice = null) }
+            val result = authManager.sendPasswordReset(trimmed)
+            result.onSuccess {
+                _uiState.update {
+                    it.copy(
+                        authLoading = false,
+                        passwordResetNotice = "If an account exists for $trimmed, a password reset link has been sent. Check your inbox and spam folder."
+                    )
+                }
+            }.onFailure { err ->
+                _uiState.update {
+                    it.copy(
+                        authLoading = false,
+                        authError = err.message ?: "Could not send password reset email right now."
+                    )
+                }
+            }
+        }
+    }
+
+    fun emergencyResetAndSignOut() {
+        viewModelScope.launch {
+            catalogueJob?.cancel()
+            repository.wipeLocalVault()
+            authManager.signOut()
+            repository.setActiveSession(null)
+            _uiState.update {
+                it.copy(
+                    session = null,
+                    allItems = emptyList(),
+                    visibleItems = emptyList(),
+                    selectionMode = false,
+                    selectedIds = emptySet(),
+                    appLockEnabled = false,
+                    isLocked = false,
+                    authError = null,
+                    passwordResetNotice = null
+                )
+            }
+            postSnackbar("Device lock reset and local cache wiped. Sign in again to restore cloud data.")
         }
     }
 

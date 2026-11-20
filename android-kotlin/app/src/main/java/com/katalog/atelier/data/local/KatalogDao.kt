@@ -50,6 +50,9 @@ interface KatalogDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertRecentlyViewed(entry: RecentlyViewedEntity)
 
+    @Query("DELETE FROM inventory_items")
+    suspend fun clearAllItems()
+
     @Query("DELETE FROM recently_viewed")
     suspend fun clearRecentlyViewed()
 }

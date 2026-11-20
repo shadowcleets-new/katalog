@@ -43,8 +43,10 @@ fun AuthScreen(
     isFirebaseConfigured: Boolean,
     isLoading: Boolean,
     errorMessage: String?,
+    passwordResetNotice: String?,
     onSignInEmail: (String, String) -> Unit,
     onRegisterEmail: (String, String, String) -> Unit,
+    onPasswordReset: (String) -> Unit,
     onGoogleSignIn: (android.content.Context) -> Unit,
     onEnterOfflineMode: () -> Unit
 ) {
@@ -128,6 +130,28 @@ fun AuthScreen(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    if (!isRegister) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            TextButton(
+                                enabled = !isLoading,
+                                onClick = { onPasswordReset(email) }
+                            ) {
+                                Text("Forgot password?")
+                            }
+                        }
+                    }
+
+                    if (!passwordResetNotice.isNullOrBlank()) {
+                        Text(
+                            text = passwordResetNotice,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
 
                     if (!errorMessage.isNullOrBlank()) {
                         Text(

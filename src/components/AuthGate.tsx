@@ -8,6 +8,7 @@ interface AuthGateProps {
   onGoogleSignIn: () => Promise<void>;
   onEmailSignIn: (email: string, password: string) => Promise<void>;
   onEmailRegister: (name: string, email: string, password: string) => Promise<void>;
+  onPasswordReset: (email: string) => Promise<void>;
   onEnterDemoWorkspace: () => void;
   authError: string | null;
   busy: boolean;
@@ -17,6 +18,7 @@ export const AuthGate: React.FC<AuthGateProps> = ({
   onGoogleSignIn,
   onEmailSignIn,
   onEmailRegister,
+  onPasswordReset,
   onEnterDemoWorkspace,
   authError,
   busy,
@@ -27,6 +29,8 @@ export const AuthGate: React.FC<AuthGateProps> = ({
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [resetNotice, setResetNotice] = useState<string | null>(null);
+  const [resetBusy, setResetBusy] = useState(false);
 
   const strength = evaluatePasswordStrength(password);
 
@@ -56,6 +60,28 @@ export const AuthGate: React.FC<AuthGateProps> = ({
         return;
       }
       await onEmailSignIn(trimmedEmail, password);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setFormError(null);
+    setResetNotice(null);
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setFormError('Enter your work email address above first, then select Forgot password.');
+      return;
+    }
+    setResetBusy(true);
+    try {
+      await onPasswordReset(trimmedEmail);
+      // Neutral confirmation message avoids account enumeration while guiding legitimate users
+      setResetNotice(
+        `If an account exists for ${trimmedEmail}, a password reset link has been sent. Check your inbox and spam folder.`
+      );
+    } catch {
+      setFormError('Could not send password reset email right now. Check your connection and try again.');
+    } finally {
+      setResetBusy(false);
     }
   };
 
@@ -250,9 +276,21 @@ export const AuthGate: React.FC<AuthGateProps> = ({
             </div>
 
             <div>
-              <label htmlFor="auth-password" className="block text-sm font-medium mb-1.5">
-                Password
-              </label>
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <label htmlFor="auth-password" className="block text-sm font-medium">
+                  Password
+                </label>
+                {mode === 'signin' && (
+                  <button
+                    type="button"
+                    disabled={busy || resetBusy}
+                    onClick={() => void handleForgotPassword()}
+                    className="text-xs font-semibold text-[var(--m3-primary)] hover:underline disabled:opacity-50"
+                  >
+                    {resetBusy ? 'Sending reset link...' : 'Forgot password?'}
+                  </button>
+                )}
+              </div>
               <div className="relative">
                 <Lock
                   className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--m3-on-surface-variant)]"
@@ -294,6 +332,15 @@ export const AuthGate: React.FC<AuthGateProps> = ({
                 </div>
               )}
             </div>
+
+            {resetNotice && (
+              <div
+                role="status"
+                className="rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+              >
+                {resetNotice}
+              </div>
+            )}
 
             {displayError && (
               <div

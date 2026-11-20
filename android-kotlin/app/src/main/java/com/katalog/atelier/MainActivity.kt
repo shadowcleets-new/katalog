@@ -87,8 +87,10 @@ private fun KatalogAppRoot(viewModel: KatalogViewModel) {
                 isFirebaseConfigured = uiState.isFirebaseConfigured,
                 isLoading = uiState.authLoading,
                 errorMessage = uiState.authError,
+                passwordResetNotice = uiState.passwordResetNotice,
                 onSignInEmail = viewModel::signInWithEmail,
                 onRegisterEmail = viewModel::registerWithEmail,
+                onPasswordReset = viewModel::sendPasswordReset,
                 onGoogleSignIn = viewModel::signInWithGoogle,
                 onEnterOfflineMode = viewModel::enterOfflineAtelierMode
             )

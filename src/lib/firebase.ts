@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  sendPasswordResetEmail,
   updateProfile,
   signOut,
   type User,
@@ -133,6 +134,10 @@ export async function registerWithEmail(
 
 export async function resendVerificationEmail(user: User): Promise<void> {
   await sendEmailVerification(user);
+}
+
+export async function sendPasswordReset(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email.trim());
 }
 
 export async function signOutUser(): Promise<void> {

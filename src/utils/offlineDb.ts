@@ -253,6 +253,24 @@ export async function clearOfflineVaultCache(): Promise<void> {
   }
 }
 
+/** Wipes all local IndexedDB stores (items, media, recents, syncQueue) for emergency PIN reset or full sign-out. */
+export async function wipeAllLocalVaultData(): Promise<void> {
+  try {
+    const db = await openDb();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction([STORE_ITEMS, STORE_MEDIA, STORE_RECENT, STORE_QUEUE], 'readwrite');
+      tx.objectStore(STORE_ITEMS).clear();
+      tx.objectStore(STORE_MEDIA).clear();
+      tx.objectStore(STORE_RECENT).clear();
+      tx.objectStore(STORE_QUEUE).clear();
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch {
+    // ignore
+  }
+}
+
 /** Securely hashes a device PIN using Web Crypto API SHA-256 with a static app salt. */
 export async function hashDevicePin(pin: string): Promise<string> {
   const enc = new TextEncoder().encode(`katalog-vault-salt-v1::${pin}`);

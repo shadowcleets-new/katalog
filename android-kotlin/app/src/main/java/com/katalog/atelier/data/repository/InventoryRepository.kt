@@ -264,4 +264,20 @@ class InventoryRepository(
             )
         }
     }
+
+    /**
+     * Erases all locally persisted catalogue records, queued mutations, recently viewed logs,
+     * private garment photos, and Coil disk cache on emergency lock reset or sign-out.
+     */
+    suspend fun wipeLocalVault() {
+        dao.clearAllItems()
+        dao.clearSyncQueue()
+        dao.clearRecentlyViewed()
+        runCatching {
+            java.io.File(context.filesDir, "garment_photos").deleteRecursively()
+        }
+        runCatching {
+            java.io.File(context.cacheDir, "coil_garment_cache").deleteRecursively()
+        }
+    }
 }

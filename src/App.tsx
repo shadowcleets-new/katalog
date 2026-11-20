@@ -18,6 +18,7 @@ import {
   ensureUserProfileDoc,
   registerWithEmail,
   resendVerificationEmail,
+  sendPasswordReset,
   signInWithEmail,
   signInWithGooglePopup,
   signOutUser,
@@ -65,6 +66,7 @@ import {
   replaceSyncQueue,
   saveCachedItems,
   saveMediaDataUrl,
+  wipeAllLocalVaultData,
 } from './utils/offlineDb';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { AuthGate } from './components/AuthGate';
@@ -122,6 +124,7 @@ export default function App() {
   });
   const [authBusy, setAuthBusy] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [, setAuthRefreshTick] = useState(0);
 
   // Appearance (Material 3 Expressive Dynamic Color + Light/Dark)
   const [darkMode, setDarkMode] = useState<boolean>(() => {
@@ -390,6 +393,32 @@ export default function App() {
     } finally {
       setAuthBusy(false);
     }
+  };
+
+  const handlePasswordReset = async (email: string) => {
+    await sendPasswordReset(email);
+  };
+
+  const handleForgotPinReset = async () => {
+    await wipeAllLocalVaultData();
+    handleRemovePinLock();
+    setItems([]);
+    setSyncQueue([]);
+    setRecentlyViewed([]);
+    setSelectedItemId(null);
+    setDemoMode(false);
+    try {
+      localStorage.removeItem('katalog_demo_mode');
+    } catch {
+      // ignore
+    }
+    try {
+      await signOutUser();
+    } catch {
+      // Proceed to AuthGate even if offline
+    }
+    setUser(null);
+    setActiveTab('catalogue');
   };
 
   const handleEnterDemoWorkspace = () => {
@@ -928,6 +957,7 @@ export default function App() {
         onGoogleSignIn={handleGoogleSignIn}
         onEmailSignIn={handleEmailSignIn}
         onEmailRegister={handleEmailRegister}
+        onPasswordReset={handlePasswordReset}
         onEnterDemoWorkspace={handleEnterDemoWorkspace}
         authError={authError}
         busy={authBusy}
@@ -936,7 +966,13 @@ export default function App() {
   }
 
   if (isLocked && pinHash) {
-    return <AppLockOverlay expectedHash={pinHash} onUnlock={() => setIsLocked(false)} />;
+    return (
+      <AppLockOverlay
+        expectedHash={pinHash}
+        onUnlock={() => setIsLocked(false)}
+        onForgotPinReset={handleForgotPinReset}
+      />
+    );
   }
 
   const navItems: { id: NavTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -1208,6 +1244,8 @@ export default function App() {
                       if (user) {
                         await user.reload();
                         setUser(auth.currentUser);
+                        // Force React re-render because Firebase User.reload() mutates user.emailVerified in-place
+                        setAuthRefreshTick((tick) => tick + 1);
                         if (auth.currentUser?.emailVerified) {
                           await ensureUserProfileDoc(auth.currentUser, 'Mumbai Production');
                           notify('Email verified. Cloud sync enabled.');

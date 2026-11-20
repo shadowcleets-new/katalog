@@ -130,6 +130,11 @@ class FirebaseAuthManager(private val appContext: Context) {
         user.sendEmailVerification().await()
     }
 
+    suspend fun sendPasswordReset(email: String): Result<Unit> = runCatching {
+        val firebaseAuth = auth ?: error("Add app/google-services.json to enable Firebase password reset.")
+        firebaseAuth.sendPasswordResetEmail(email.trim()).await()
+    }
+
     suspend fun reloadCurrentUser(): AuthUserSession? {
         val user = auth?.currentUser ?: return null
         runCatching { user.reload().await() }
